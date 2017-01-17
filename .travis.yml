@@ -12,7 +12,7 @@ before_install:
   - wget https://releases.hashicorp.com/packer/0.12.1/packer_0.12.1_linux_amd64.zip
   - unzip -d ~/bin packer_0.12.1_linux_amd64.zip
   - pip install ansible
-before_script: "./bin/ci.sh"
+before_script: "travis_wait ./bin/ci.sh"
 script: "echo TODO: test"
 before_deploy: "mv dest/ruby-* dest/ruby-${TRAVIS_BRANCH}.tar.gz"
 deploy:
