@@ -1,0 +1,46 @@
+- name: ruby
+  hosts: all
+  gather_facts: False
+  vars:
+    rbenv_root: /tmp/rbenv
+  tasks:
+    - name: install packages
+      become: "{{ build_type == 'amazon-ebs' }}"
+      yum: name={{ item }} state=present
+      with_items:
+        # for ruby
+        - gcc
+        - openssl-devel
+        - readline-devel
+        - zlib-devel
+        # major native gems
+        - mysql-devel
+        - postgresql-devel
+        - sqlite-devel
+        - ImageMagick-devel
+    - name: unarchive rbenv
+      unarchive:
+        src: https://github.com/rbenv/rbenv/archive/master.zip
+        dest: .
+        remote_src: True
+    - name: unarchive ruby-build
+      unarchive:
+        src: https://github.com/rbenv/ruby-build/archive/master.zip
+        dest: .
+        remote_src: True
+    - name: Rename to .rbenv
+      command: mv rbenv-master {{ rbenv_root }}
+    - name: create plugins dir
+      file: path={{ rbenv_root }}/plugins state=directory
+    - name: Rename to ruby-build
+      command: mv ruby-build-master {{ rbenv_root }}/plugins/ruby-build
+    - name: build Ruby and major native gems
+      shell: |
+        export RBENV_ROOT={{ rbenv_root }}
+        export PATH=$RBENV_ROOT/bin:$PATH
+        eval "$(rbenv init -)"
+        rbenv install {{ version }}
+        rbenv global 2.4.0
+        gem install --no-document mysql2 pg sqlite3 rmagick
+    - name: archive rbenv dir
+      command: tar czf dest.tar.gz -C /tmp rbenv

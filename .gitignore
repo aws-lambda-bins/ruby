@@ -1,5 +1,11 @@
-# Cache objects
-packer_cache/
+dest/
 
-# For built boxes
-*.box
+# Ansible
+*.retry
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+
+# direnv
+.envrc
