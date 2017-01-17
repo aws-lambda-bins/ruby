@@ -1,0 +1,30 @@
+sudo: required
+language: ruby
+env:
+  global:
+    secure: U0vA6fiBkEg99omJX8u3TbXCxhAd65N0u7xJ9WLHNndgc+kclCNvLNacZDCHmz0Ud80bSdb5sZ3tBQ7pwX+LRQ648yYYZvgoMshW2y3TInaRGkTnrqhbAfC2yDklqWItV1R7rL/v31R7aiGt72fpik+lyR6WjfTRFxOrwiJyFkBUnl2ZUcf0u8WBBiHzWzDM4czbN5S5NzntTpuPo76uwjpuAHD66Gnn3JYo6KJ+pJIbNPF5vS/6WYUY7EtuxrTtWkYyQdNenECwEcu0BXizayM8FEkD2hDq5FNSygy8e7psQL0yG9tETGanQUqqsrMWWbSaPvvELQPORHC3fMlRT2mWhyfc8L3vOTldQAwYvJkY+kHPcPaNZfzelj4Ew2tLqDKjWTSYTajCoCeHaGflWQcNBBmNUfeeNc2kEy9iPHJatGVAFpiWBgczPLCVP/iO0G08OOpaD180oFVmcNhR5Sdk3r9epvA/ZJXW+WoioDcYyWBm/PEWra/OF1VXfaEV7ge4IMuwJ+rn6GJfZQg1EYF4NCpISSbGAvWmIIUVTg0z+CKz0/HNtvVCqbJm9Gq+kZjp2gCGPfVKKwLcuEai+JA4x8rTI2M40xstM0KrRH0D6pv979ZVN9CUgTtI3km4zEQK8ci3kZ46q+c0nSILUIBEtZcS3b5vgRhD9/UQPyQ=
+cache:
+  - bundler
+  - pip
+services:
+  - docker
+before_install:
+  - wget https://releases.hashicorp.com/packer/0.12.1/packer_0.12.1_linux_amd64.zip
+  - unzip -d ~/bin packer_0.12.1_linux_amd64.zip
+  - pip install ansible
+before_script: "./bin/ci.sh"
+script: "echo TODO: test"
+before_deploy: "mv dest/ruby-* dest/ruby-${TRAVIS_BRANCH}.tar.gz"
+deploy:
+  provider: s3
+  bucket: aws-lambda-bins
+  acl: public_read
+  skip_cleanup: true
+  local_dir: dest
+  upload-dir: ruby
+  region: ap-northeast-1
+  on:
+    all_branches: true
+    condition: '"${TRAVIS_BRANCH}" = "master" || -n "${TRAVIS_TAG}"'
+notifications:
+  email: false
