@@ -13,7 +13,6 @@ before_install:
   - unzip -d ~/bin packer_0.12.1_linux_amd64.zip
   - pip install ansible
 before_script: "travis_wait ./bin/ci.sh"
-script: "echo TODO: test"
 before_deploy: "mv dest/ruby-* dest/ruby-${TRAVIS_BRANCH}.tar.gz"
 deploy:
   provider: s3
