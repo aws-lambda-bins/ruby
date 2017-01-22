@@ -7,7 +7,7 @@
         is_amazon_ebs: "{{ build_type == 'amazon-ebs' }}"
         major_version: "{{ version | regex_replace('.\\d$', '') }}"
     - name: install packages
-      become: is_amazon_ebs
+      become: "{{ is_amazon_ebs }}"
       yum: name={{ item }} state=present
       with_items:
         # for ruby
@@ -21,7 +21,7 @@
         - sqlite-devel
         - ImageMagick-devel
     - name: clean yum cache
-      become: is_amazon_ebs
+      become: "{{ is_amazon_ebs }}"
       command: yum clean all
     - name: unarchive ruby tarball
       unarchive:
