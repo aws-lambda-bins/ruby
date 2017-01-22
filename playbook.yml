@@ -1,11 +1,13 @@
 - name: ruby
   hosts: all
   gather_facts: False
-  vars:
-    rbenv_root: /tmp/rbenv
   tasks:
+    - name: set vars
+      set_fact:
+        is_amazon_ebs: "{{ build_type == 'amazon-ebs' }}"
+        major_version: "{{ version | regex_replace('.\\d$', '') }}"
     - name: install packages
-      become: "{{ build_type == 'amazon-ebs' }}"
+      become: is_amazon_ebs
       yum: name={{ item }} state=present
       with_items:
         # for ruby
@@ -18,29 +20,29 @@
         - postgresql-devel
         - sqlite-devel
         - ImageMagick-devel
-    - name: unarchive rbenv
+    - name: clean yum cache
+      become: is_amazon_ebs
+      command: yum clean all
+    - name: unarchive ruby tarball
       unarchive:
-        src: https://github.com/rbenv/rbenv/archive/master.zip
+        src: https://cache.ruby-lang.org/pub/ruby/{{ major_version }}/ruby-{{ version }}.tar.gz
         dest: .
         remote_src: True
-    - name: unarchive ruby-build
-      unarchive:
-        src: https://github.com/rbenv/ruby-build/archive/master.zip
-        dest: .
-        remote_src: True
-    - name: Rename to .rbenv
-      command: mv rbenv-master {{ rbenv_root }}
-    - name: create plugins dir
-      file: path={{ rbenv_root }}/plugins state=directory
-    - name: Rename to ruby-build
-      command: mv ruby-build-master {{ rbenv_root }}/plugins/ruby-build
-    - name: build Ruby and major native gems
-      shell: |
-        export RBENV_ROOT={{ rbenv_root }}
-        export PATH=$RBENV_ROOT/bin:$PATH
-        eval "$(rbenv init -)"
-        rbenv install {{ version }}
-        rbenv global 2.4.0
-        gem install --no-document mysql2 pg sqlite3 rmagick
-    - name: archive rbenv dir
-      command: tar czf dest.tar.gz -C /tmp rbenv
+    - name: install ruby
+      command: "{{ item }} chdir=ruby-{{ version }} "
+      with_items:
+        - ./configure --prefix=/tmp/usr
+        - make install
+    - name: install native gems
+      command: "/tmp/usr/bin/gem install --no-document {{ item }}"
+      with_items:
+        - mysql2
+        - pg
+        - sqlite3
+        - rmagick
+    - name: archive installed ruby dir
+      command: tar czf dest.tar.gz -C /tmp usr
+    - name: clean up
+      file: path={{ item }} state=absent
+      with_items:
+        - ruby-{{ version }}
